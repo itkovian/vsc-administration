@@ -25,6 +25,7 @@ build-backend = "hatchling.build"
 packages = ["src/vsc"]
 
 [project.scripts]
+sync_slurm_acct = "vsc.administration.cli:sync_slurm_acct_main"
 
 
 [tool.uv.sources]
