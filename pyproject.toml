@@ -1,0 +1,35 @@
+[project]
+name = "vsc-administration"
+version = "5.0.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Andy Georges", email = "itkovian@gmail.com" }
+]
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "lockfile == 0.12.2",
+    "vsc-accountpage-clients",
+    "vsc-base",
+    "vsc-config",
+    "vsc-filesystems",
+    "vsc-utils",
+]
+
+
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vsc"]
+
+[project.scripts]
+
+
+[tool.uv.sources]
+vsc-base = { git = "https://github.com/itkovian/vsc-base.git", branch = "uv"}
+vsc-config = { git = "ssh://git@github.com/itkovian/vsc-config.git", branch = "uv"}
+vsc-utils = { git = "https://github.com/itkovian/vsc-utils.git", branch = "uv"}
+vsc-accountpage-clients = { git = "ssh://git@github.com/itkovian/vsc-accountpage-clients.git", branch = "uv"}
+vsc-filesystems = { git = "https://github.com/itkovian/vsc-filesystems.git", branch = "uv"}
