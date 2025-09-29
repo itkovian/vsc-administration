@@ -16,7 +16,6 @@ dependencies = [
     "vsc-utils",
 ]
 
-
 [build-system]
 requires = ["hatchling>=1.21"]
 build-backend = "hatchling.build"

@@ -16,6 +16,9 @@ wheelhouse:
 	uv pip install -r requirements.txt --wheel-dir $(WHEELHOUSE) --only-binary :all:
 
 install:
+	mkdir -p $(BUILDROOT)$(PREFIX)
+	UV_PYTHON_INSTALL_DIR=$(BUILDROOT)$(UV_PYTHON_DIR) \
+			uv venv --python $(PYTHON_VER) $(BUILDROOT)$(VENVDIR)
 	uv venv $(BUILDROOT)$(VENVDIR)
 	uv pip install --python $(BUILDROOT)$(VENVDIR)/bin/python .
 
