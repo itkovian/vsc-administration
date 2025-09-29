@@ -2,6 +2,7 @@
 NAME := $(shell python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['name'])")
 VERSION := $(shell python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
 BINARIES := $(shell python -c "import tomllib;data=tomllib.load(open('pyproject.toml','rb'));print(' '.join(data['project']['scripts'].keys()))")
+PYTHON_VER := "3.13.1"
 
 PREFIX=/opt/$(NAME)
 VENVDIR=$(PREFIX)/venv
@@ -17,8 +18,8 @@ wheelhouse:
 
 install:
 	mkdir -p $(BUILDROOT)$(PREFIX)
-	UV_PYTHON_INSTALL_DIR=$(BUILDROOT)$(UV_PYTHON_DIR) \
-			uv venv --python $(PYTHON_VER) $(BUILDROOT)$(VENVDIR)
+	UV_PYTHON_INSTALL_DIR=$(BUILDROOT)$(VENVDIR)$(UV_PYTHON_DIR)
+			uv venv --python $(PYTHON_VER)
 	uv venv $(BUILDROOT)$(VENVDIR)
 	uv pip install --python $(BUILDROOT)$(VENVDIR)/bin/python .
 
