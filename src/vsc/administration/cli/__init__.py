@@ -16,4 +16,4 @@
 This module provides the command-line interface for vsc-administration
 """
 
-from vsc.administration.cli.sync_slurm_ap import main as sync_slurm_acct_main
+from vsc.administration.cli.sync_slurm_ap import sync_slurm_acct_main as sync_slurm_acct_main
