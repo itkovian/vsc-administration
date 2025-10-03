@@ -18,7 +18,7 @@ wheelhouse:
 
 install:
 	mkdir -p $(BUILDROOT)$(PREFIX)
-	UV_PYTHON_INSTALL_DIR=$(BUILDROOT)$(VENVDIR)$(UV_PYTHON_DIR)
+	UV_PYTHON_INSTALL_DIR=$(BUILDROOT)$(PREFIX)$(UV_PYTHON_DIR) \
 			uv venv --python $(PYTHON_VER)
 	uv venv $(BUILDROOT)$(VENVDIR)
 	uv pip install --python $(BUILDROOT)$(VENVDIR)/bin/python .
