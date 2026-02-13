@@ -28,8 +28,8 @@ sync_slurm_acct = "vsc.administration.cli:sync_slurm_acct_main"
 
 
 [tool.uv.sources]
-vsc-base = { git = "https://github.com/itkovian/vsc-base.git", branch = "uv"}
-vsc-config = { git = "ssh://git@github.com/itkovian/vsc-config.git", branch = "uv"}
-vsc-utils = { git = "https://github.com/itkovian/vsc-utils.git", branch = "uv"}
-vsc-accountpage-clients = { git = "ssh://git@github.com/itkovian/vsc-accountpage-clients.git", branch = "uv"}
-vsc-filesystems = { git = "https://github.com/itkovian/vsc-filesystems.git", branch = "uv"}
+vsc-base = { git = "https://github.com/itkovian/vsc-base.git", branch = "uv-package-only"}
+vsc-config = { git = "ssh://git@github.com/itkovian/vsc-config.git", branch = "uv-package-only"}
+vsc-utils = { git = "https://github.com/itkovian/vsc-utils.git", branch = "uv-package-only"}
+vsc-accountpage-clients = { git = "ssh://git@github.com/itkovian/vsc-accountpage-clients.git", branch = "uv-package-only"}
+vsc-filesystems = { git = "https://github.com/itkovian/vsc-filesystems.git", branch = "uv-package-only"}
