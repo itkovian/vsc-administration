@@ -214,7 +214,7 @@ CgroupAutomount         = no
 CgroupMountpoint        = (null)
 """
 
-        scontrol_part = """PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES ExclusiveUser=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G"""
+        scontrol_part = """PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES Exclusive=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G"""
 
         scontrol_lic = """LicenseName=comsol3@bogus Total=2 Used=0 Free=2 Reserved=0 Remote=yes
 LicenseName=comsol3@bogus2 Total=20 Used=0 Free=20 Reserved=4 Remote=yes

@@ -58,7 +58,7 @@ ScontrolConfigFields = [
 
 ScontrolPartitionFields = [
     'PartitionName', 'AllowGroups', 'AllowAccounts', 'AllowQos', 'AllocNodes', 'Default', 'QoS', 'DefaultTime',
-    'DisableRootJobs', 'ExclusiveUser', 'GraceTime', 'Hidden', 'MaxNodes', 'MaxTime', 'MinNodes', 'LLN',
+    'DisableRootJobs', 'Exclusive', 'GraceTime', 'Hidden', 'MaxNodes', 'MaxTime', 'MinNodes', 'LLN',
     'MaxCPUsPerNode', 'Nodes', 'PriorityJobFactor', 'PriorityTier', 'RootOnly', 'ReqResv', 'OverSubscribe',
     'OverTimeLimit', 'PreemptMode', 'State', 'TotalCPUs', 'TotalNodes', 'SelectTypeParameters', 'JobDefaults',
     'DefMemPerCPU', 'MaxMemPerNode', 'TRESBillingWeights',
