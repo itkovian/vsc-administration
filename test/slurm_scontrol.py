@@ -82,11 +82,11 @@ class SlurmScontrolTest(TestCase):
 
         # test partition output
         scontrol_output = [
-            'PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES ExclusiveUser=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G',
+            'PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES Exclusive=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G',
         ]
         info = parse_scontrol_dump(scontrol_output, ScontrolTypes.partition)
         self.assertEqual(info, set([
-            SlurmPartition(PartitionName='mypart', AllowGroups='gabc,wheel', AllowAccounts='ALL', AllowQos='ALL', AllocNodes='ALL', Default='YES', QoS='N/A', DefaultTime='01:00:00', DisableRootJobs='YES', ExclusiveUser='NO', GraceTime='0', Hidden='NO', MaxNodes='UNLIMITED', MaxTime='3-00:00:00', MinNodes='0', LLN='NO', MaxCPUsPerNode='UNLIMITED', Nodes='node1,node2', PriorityJobFactor='1', PriorityTier='1', RootOnly='NO', ReqResv='NO', OverSubscribe='NO', OverTimeLimit='NONE', PreemptMode='OFF', State='UP', TotalCPUs=32, TotalNodes=2, SelectTypeParameters='NONE', JobDefaults=None, DefMemPerCPU=800, MaxMemPerNode=3200, TRESBillingWeights='CPU=1,Mem=1.33G'),
+            SlurmPartition(PartitionName='mypart', AllowGroups='gabc,wheel', AllowAccounts='ALL', AllowQos='ALL', AllocNodes='ALL', Default='YES', QoS='N/A', DefaultTime='01:00:00', DisableRootJobs='YES', Exclusive='NO', GraceTime='0', Hidden='NO', MaxNodes='UNLIMITED', MaxTime='3-00:00:00', MinNodes='0', LLN='NO', MaxCPUsPerNode='UNLIMITED', Nodes='node1,node2', PriorityJobFactor='1', PriorityTier='1', RootOnly='NO', ReqResv='NO', OverSubscribe='NO', OverTimeLimit='NONE', PreemptMode='OFF', State='UP', TotalCPUs=32, TotalNodes=2, SelectTypeParameters='NONE', JobDefaults=None, DefMemPerCPU=800, MaxMemPerNode=3200, TRESBillingWeights='CPU=1,Mem=1.33G'),
         ]))
 
     @patch('vsc.administration.slurm.scontrol.asyncloop')
