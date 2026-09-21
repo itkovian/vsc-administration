@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -36,7 +36,7 @@ NAGIOS_HEADER = "replicate_scratch_tree"
 NAGIOS_CHECK_INTERVAL_THRESHOLD = 15 * 60  # 15 minutes
 
 
-SYNC_TIMESTAMP_FILENAME = "/var/run/%s.timestamp" % (NAGIOS_HEADER)
+SYNC_TIMESTAMP_FILENAME = f"/var/run/{NAGIOS_HEADER}.timestamp"
 
 
 def set_up_filesystem(
@@ -64,18 +64,18 @@ def set_up_filesystem(
     # create directories up to vsc42000
     for group in range(0, 21):
 
-        group_path = os.path.join(fileset_path, "vsc4%02d" % group)
+        group_path = os.path.join(fileset_path, f"vsc4{int(group):02}")
         if not os.path.exists(group_path):
             logging.info("Path %s does not exist. Creating directory.", group_path)
             try:
                 if not dry_run:
                     os.mkdir(group_path)
                     os.chmod(group_path, 0o755)
-            except (IOError, OSError) as err:
+            except OSError as err:
                 logging.error("Problem creating dir %s [%s]", group_path, err)
 
         for user in range(0, 100):
-            user_name = "vsc4%02d%02d" % (group, user)
+            user_name = f"vsc4{int(group):02}{int(user):02}"
             user_id = 2540000 + group * 100 + user
             user_path = os.path.join(group_path, user_name)
             if not os.path.exists(user_path):
@@ -85,7 +85,7 @@ def set_up_filesystem(
                         os.mkdir(user_path)
                         os.chown(user_path, user_id, user_id)
                         os.chmod(user_path, 0o700)
-                except (IOError, OSError) as err:
+                except OSError as err:
                     logging.error("Problem creating dir %s: %s", user_path, err)
 
     if vo_support:
@@ -98,7 +98,7 @@ def set_up_filesystem(
 
         for vo in range(1, 100):
 
-            vo_name = "gvo%05d" % (vo,)
+            vo_name = f"gvo{int(vo):05}"
             try:
                 vo_group = grp.getgrnam(vo_name)
             except Exception:
@@ -127,7 +127,7 @@ def set_up_filesystem(
                     os.mkdir(vo_path)
                     os.chown(vo_path, vo_moderator.pw_uid, vo_group.gr_gid)
                     os.chmod(vo_path, 0o770)
-                except (IOError, OSError) as err:
+                except OSError as err:
                     logging.error("Problem creating dir %s", vo_path)
 
             for member_name in vo_members:

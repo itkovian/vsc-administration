@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -71,7 +71,7 @@ SacctQosFields = [
 ]
 
 SacctResourceFields = [
-    "Name", "Server", "Type", "Count", "PCT__Allocated", "ServerType",
+    "Name", "Server", "Type", "Count", "Allocated", "ServerType",
 ]
 
 IGNORE_USERS = ["root"]
@@ -213,15 +213,15 @@ def create_add_account_command(account, parent, organisation, cluster, fairshare
     command = [
         "account",
         account,
-        "Parent={0}".format(parent or "root"),
-        "Organization={0}".format(SLURM_ORGANISATIONS[organisation]),
-        "Cluster={0}".format(cluster)
+        f"Parent={parent or 'root'}",
+        f"Organization={SLURM_ORGANISATIONS[organisation]}",
+        f"Cluster={cluster}"
     ]
 
     if fairshare is not None:
-        command.append("Fairshare={0}".format(fairshare))
+        command.append(f"Fairshare={fairshare}")
     if qos is not None:
-        command.append("Qos={0}".format(qos))
+        command.append(f"Qos={qos}")
 
     logging.debug(
         "Adding command to add account %s with Parent=%s Cluster=%s Organization=%s",
@@ -477,7 +477,7 @@ def create_add_resource_license_command(name, server, stype, clusters, count):
         f"Name={name}",
         f"Server={server}",
         f"ServerType={stype}",
-        "Cluster={}".format(",".join(clusters)),
+        f"Cluster={','.join(clusters)}",
         f"Count={count}",
         "PercentAllowed=100",
     ]
@@ -517,7 +517,6 @@ def create_modify_resource_license_command(name, server, stype, count):
         f"ServerType={stype}",
         "set",
         f"Count={count}",
-        "PercentAllowed=100",
     ]
 
     return command

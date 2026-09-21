@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -66,11 +66,11 @@ from vsc.config.base import VSC_SLURM_CLUSTERS, PRODUCTION, PILOT, GENT
 NAGIOS_HEADER = "sync_slurm_external_licenses"
 NAGIOS_CHECK_INTERVAL_THRESHOLD = 60 * 60  # 60 minutes
 
-SYNC_SLURM_ACCT_LOGFILE = "/var/log/%s.log" % (NAGIOS_HEADER)
+SYNC_SLURM_ACCT_LOGFILE = f"/var/log/{NAGIOS_HEADER}.log"
 
 FLEXLM = 'flexlm'
 
-LMUTIL_LMSTAT_REGEXP = re.compile("""
+LMUTIL_LMSTAT_REGEXP = re.compile(r"""
     Users\s+of\s+(?P<name>\w+):
     \s+\(
         Total\s+of\s+(?P<total>\d+)\s+licenses?\s+issued;\s+
@@ -91,7 +91,7 @@ def _parse_lmutil(output):
     return res
 
 
-def retrieve_license_data(license_type, tool, server, port):
+def retrieve_license_data(license_type, tool, server, port, command_options) -> dict:
     """
     Run tool to retrieve all license data from server/port.
     Return dict with key the toolname and value another dict with total and in_use as keys
@@ -104,9 +104,9 @@ def retrieve_license_data(license_type, tool, server, port):
         (fd, fn) = tempfile.mkstemp(suffix='.flexlm_fake_lic')
         try:
             with os.fdopen(fd, 'w') as fh:
-                fh.write('SERVER %s AABBCCDDEEFF %s\n' % (server, port))
+                fh.write(f'SERVER {server} AABBCCDDEEFF {port}\n')
             # lmutil lmstat -a -c tmpfile
-            (ec, output) = RunNoShell.run([tool, 'lmstat', '-a', '-c', fn])
+            (ec, output) = RunNoShell.run([tool] + command_options.split(" ") + [fn])
             if ec != 0:
                 raise Exception("Failed to run flexlm tool")
         finally:
@@ -117,7 +117,7 @@ def retrieve_license_data(license_type, tool, server, port):
 
         #  For every toolname, add total and in_use
         for data in parsed:
-            name = data.pop('name')
+            name = data.pop('name').lower()
             res[name] = data
     else:
         res = None
@@ -148,6 +148,7 @@ def licenses_data(config_filename, default_tool):
     with open(config_filename) as fh:
         all_extern_data = json.load(fh)
 
+
     all_externs = sorted(all_extern_data.keys())  # sorted for reproducible tests
     for extern in all_externs:
         edata = all_extern_data[extern]
@@ -156,15 +157,24 @@ def licenses_data(config_filename, default_tool):
             edata['license_type'] = FLEXLM
         if 'tool' not in edata:
             edata['tool'] = default_tool
+        if 'command_options' not in edata:
+            edata['command_options'] = "lmstat -a -c"  # default lmutil options
+
         # for each name, retrieve data from server and augment software count with total and in_use data
         #    compare with total count (and report some error/warning if this goes out of sync)
         #       if server is unreachable, set number in_use equal to count: i.e. all is in use
-        lics = retrieve_license_data(edata['license_type'], edata['tool'], edata['server'], edata['port'])
+        lics = retrieve_license_data(
+            edata['license_type'],
+            edata['tool'],
+            edata['server'],
+            edata['port'],
+            edata['command_options']
+        )
 
-        eknown = set(lics.keys())
+        eknown = { k.lower() for k in lics }
 
         software = edata['software']
-        econfig = set(software.keys())
+        econfig = { k.lower() for k in software }
 
         missing = econfig - eknown
         if missing:
@@ -181,7 +191,7 @@ def licenses_data(config_filename, default_tool):
             sdata['type'] = edata['license_type']
             if 'name' not in sdata:
                 sdata['name'] = soft
-            res["%s@%s" % (sdata['name'], extern)] = sdata
+            res[f"{sdata['name']}@{extern}"] = sdata
 
     return res
 
@@ -201,12 +211,12 @@ def update_licenses(licenses, clusters, ignore_resources, force_update):
     info = [resc for resc in info if resc and resc.Type == 'License' and resc.Name not in ignore_resources]
     logging.debug("%d license resources found: %s", len(info), info)
 
-    info = dict([("%s@%s" % (resc.Name, resc.Server), resc) for resc in info])
+    info = {f"{resc.Name}@{resc.Server}": resc for resc in info}
 
     known = set(list(info.keys()))
     config = set(list(licenses.keys()))
 
-    skip = set([x for x in licenses.keys() if licenses[x].get('skip', False)])
+    skip = {x for x in licenses.keys() if licenses[x].get('skip', False)}
     if skip:
         logging.warning("License resources to skip: %s", skip)
         known = known - skip
@@ -220,8 +230,15 @@ def update_licenses(licenses, clusters, ignore_resources, force_update):
     for name in new:
         lic = licenses[name]
         logging.debug("Command to add new license resource %s", lic)
-        new_update_cmds.append(create_add_resource_license_command(
-            lic['name'], lic['extern'], lic['type'], clusters, lic['count']))
+        new_update_cmds.append(
+            create_add_resource_license_command(
+                lic['name'],
+                lic['extern'],
+                lic['type'],
+                clusters,
+                lic['count']
+            )
+        )
 
     for name in update:
         lic = licenses[name]
@@ -256,39 +273,42 @@ def update_license_reservations(licenses, cluster, partition, ignore_reservation
         rlicenses[make_license_reservation_name(licname)] = lic
 
     # Check this is the correct cluster
-    #   in theory, we can also issue all scontrol commands with extra "cluster name_of_cluster" args
-    slurm_config = get_scontrol_config()
+    # in theory, we can also issue all scontrol commands with extra "cluster name_of_cluster" args
+    # scontrol without cluster does not work on tier1, from sync51
+    slurm_config = get_scontrol_config(cluster=cluster)
     if cluster != slurm_config.ClusterName:
         logging.error("Expected cluster %s, got %s (%s)", cluster, slurm_config.ClusterName, slurm_config)
         raise Exception("Wrong cluster")
 
-    partitions = get_scontrol_info(ScontrolTypes.partition)
+    partitions = get_scontrol_info(ScontrolTypes.partition, cluster=cluster)
     if partition not in partitions:
         logging.error("Expected partiton %s, only have %s", partition, partitions)
         raise Exception("Wrong partition")
 
-
     # Get the licenses
     #    This cluster should see all licenses, incl their usage
     # Convert to dict with reservation names
-    lics = dict([(make_license_reservation_name(k), v) for k, v in get_scontrol_info(ScontrolTypes.license).items()])
+    lics = {
+        make_license_reservation_name(k): v
+        for k, v in get_scontrol_info(ScontrolTypes.license, cluster=cluster).items()
+    }
     logging.debug("Existing licenses %s", lics)
 
     # Get all existing license reservations
     #    only license reservations
     #       remove the ignore_reservations also
     # The LICENSE_ONLY flag does not show up in flags
-    ress = dict([(k, v) for k, v in get_scontrol_info(ScontrolTypes.reservation).items()
+    ress = {k: v for k, v in get_scontrol_info(ScontrolTypes.reservation, cluster=cluster).items()
                  if v.Licenses is not None
                  and v.ReservationName.startswith(LICENSE_RESERVATION_PREFIX)
                  and k not in ignore_reservations
-                 ])
+                 }
     logging.debug("Existing license reservations %s", ress)
 
     known = set(list(ress.keys()))
     config = set(list(rlicenses.keys()))
 
-    skip = set([x for x in rlicenses.keys() if rlicenses[x].get('skip', False)])
+    skip = {x for x in rlicenses if rlicenses[x].get('skip', False)}
     if skip:
         logging.warning("License reservations to skip: %s", skip)
         known = known - skip
@@ -306,7 +326,9 @@ def update_license_reservations(licenses, cluster, partition, ignore_reservation
         lic = rlicenses[res]
         logging.debug("Command to add new license reservation %s", lic)
         # no reservation yet, in_use is the starting value
-        new_update_cmds.append(create_create_license_reservation(lic['fullname'], lic['in_use'], partition))
+        new_update_cmds.append(
+            create_create_license_reservation(lic['fullname'], lic['in_use'], partition, cluster=cluster)
+        )
 
     for res in update:
         lic = rlicenses[res]
@@ -330,13 +352,13 @@ def update_license_reservations(licenses, cluster, partition, ignore_reservation
             value = in_use - used
 
         if force_update or value != current_value:
-            new_update_cmds.append(create_update_license_reservation(lic['fullname'], value))
+            new_update_cmds.append(create_update_license_reservation(lic['fullname'], value, cluster=cluster))
 
-    # Cleanup reservations
+    # Clean up reservations
     remove_cmds = []
     for res in remove:
         logging.debug("Command to remove license reservation %s", res)
-        remove_cmds.append(create_delete_reservation(res))
+        remove_cmds.append(create_delete_reservation(res, cluster=cluster))
 
     return new_update_cmds, remove_cmds
 
@@ -347,7 +369,7 @@ def main():
     """
 
     options = {
-        "licenses": ('JSON file with required license information', None, 'store', "/etc/%s.json" % NAGIOS_HEADER),
+        "licenses": ('JSON file with required license information', None, 'store', f"/etc/{NAGIOS_HEADER}.json"),
         "force_update": ('No compare logic, update all found license resources and/or reservations',
                          None, 'store_true', False),
         "tool": ('Default license tool path', None, 'store', None),

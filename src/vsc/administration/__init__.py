@@ -1,6 +1,5 @@
-# -*- coding: latin-1 -*-
 #
-# Copyright 2012-2023 Ghent University
+# Copyright 2012-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),

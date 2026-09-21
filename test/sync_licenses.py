@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2023 Ghent University
+# Copyright 2022-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -63,10 +63,10 @@ class TestSyncSlurmExtLicenses(TestCase):
         server = 'a.b.c.d'
         port = 7894
 
-        res = retrieve_license_data('NOTSUPPORTED', tool, server, port)
+        res = retrieve_license_data('NOTSUPPORTED', tool, server, port, "lmstat -a -c")
         self.assertTrue(res is None)
 
-        res = retrieve_license_data('flexlm', tool, server, port)
+        res = retrieve_license_data('flexlm', tool, server, port, "lmstat -a -c")
         logging.debug("run calls: %s", mnoshell.run.mock_calls)
         logging.debug("parse calls: %s", mparse.mock_calls)
 
@@ -115,12 +115,12 @@ class TestSyncSlurmExtLicenses(TestCase):
         name, args, kwargs = mretr.mock_calls[0]
         logging.debug("%s %s %s", name, args, kwargs)
         self.assertEqual(name, '')
-        self.assertEqual(args, ('strange', '/some/path/to/strangetool', 'abc.def', 1234))
+        self.assertEqual(args, ('strange', '/some/path/to/strangetool', 'abc.def', 1234, 'lmstat -a -c' ))
         self.assertEqual(kwargs, {})
         name, args, kwargs = mretr.mock_calls[1]
         logging.debug("%s %s %s", name, args, kwargs)
         self.assertEqual(name, '')
-        self.assertEqual(args, ('flexlm', '/some/default', 'ghi.jkl', 5678))
+        self.assertEqual(args, ('flexlm', '/some/default', 'ghi.jkl', 5678, "lmstat -a -c"))
         self.assertEqual(kwargs, {})
 
         self.assertEqual(res, {
@@ -138,7 +138,7 @@ class TestSyncSlurmExtLicenses(TestCase):
     def test_update_licenses(self, masync):
         """Test sacctmgr resource commands: add new, update, skip, dont_update_identical, remove"""
 
-        masync.return_value = (0, """Name|Server|Type|Count|% Allocated|ServerType
+        masync.return_value = (0, """Name|Server|Type|Count|Allocated|ServerType
 comsol|bogus|License|2|0|flexlm
 hubba|myserver|NotALicense|10000|52|psssss
 an-4|ano-comp2|License|200|3|flexlm
@@ -169,7 +169,7 @@ an-5|ano-comp2|License|20|10|flexlm
         logging.debug("new_update %s remove %s", nw_up, rem)
         self.assertEqual(nw_up, [
             ['/usr/bin/sacctmgr', '-i', 'add', 'resource', 'Type=license', 'Name=ano-1', 'Server=ano-comp1', 'ServerType=strange', 'Cluster=clust1,clust2', 'Count=100', 'PercentAllowed=100'],
-            ['/usr/bin/sacctmgr', '-i', 'modify', 'resource', 'where', 'Name=an-5', 'Server=ano-comp2', 'ServerType=flexlm', 'set', 'Count=7', 'PercentAllowed=100'],
+            ['/usr/bin/sacctmgr', '-i', 'modify', 'resource', 'where', 'Name=an-5', 'Server=ano-comp2', 'ServerType=flexlm', 'set', 'Count=7'],
         ])
         self.assertEqual(rem, [
             ['/usr/bin/sacctmgr', '-i', 'remove', 'resource', 'where', 'Type=license', 'Name=comsol', 'Server=bogus', 'ServerType=flexlm'],
@@ -214,7 +214,7 @@ CgroupAutomount         = no
 CgroupMountpoint        = (null)
 """
 
-        scontrol_part = """PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES ExclusiveUser=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G"""
+        scontrol_part = """PartitionName=mypart AllowGroups=gabc,wheel AllowAccounts=ALL AllowQos=ALL AllocNodes=ALL Default=YES QoS=N/A DefaultTime=01:00:00 DisableRootJobs=YES Exclusive=NO GraceTime=0 Hidden=NO MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED Nodes=node1,node2 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO OverTimeLimit=NONE PreemptMode=OFF State=UP TotalCPUs=32 TotalNodes=2 SelectTypeParameters=NONE JobDefaults=(null) DefMemPerCPU=800 MaxMemPerNode=3200 TRESBillingWeights=CPU=1,Mem=1.33G"""
 
         scontrol_lic = """LicenseName=comsol3@bogus Total=2 Used=0 Free=2 Reserved=0 Remote=yes
 LicenseName=comsol3@bogus2 Total=20 Used=0 Free=20 Reserved=4 Remote=yes
@@ -239,9 +239,9 @@ ReservationName=external_license_ano-1@ano-comp1 StartTime=2022-04-29T12:01:11 E
 
         logging.debug("new_update %s remove %s", nw_up, rem)
         self.assertEqual(nw_up, [
-            ['/usr/bin/scontrol', 'create', 'reservation', 'ReservationName=external_license_an-4@ano-comp2', 'Duration=7300-0:0:0', 'Flags=LICENSE_ONLY', 'Licenses=an-4@ano-comp2:5', 'NodeCnt=0', 'Partition=mypart', 'Start=now', 'User=root'],
-            ['/usr/bin/scontrol', 'update', 'reservation', 'ReservationName=external_license_ano-1@ano-comp1', 'Licenses=ano-1@ano-comp1:20'],
+            ['/usr/bin/scontrol', '--cluster=mycluster', 'create', 'reservation', 'ReservationName=external_license_an-4@ano-comp2', 'Duration=7300-0:0:0', 'Flags=LICENSE_ONLY', 'Licenses=an-4@ano-comp2:5', 'NodeCnt=0', 'Partition=mypart', 'Start=now', 'User=root'],
+            ['/usr/bin/scontrol', '--cluster=mycluster', 'update', 'reservation', 'ReservationName=external_license_ano-1@ano-comp1', 'Licenses=ano-1@ano-comp1:20'],
         ])
         self.assertEqual(rem, [
-            ['/usr/bin/scontrol', 'delete', 'reservation', 'ReservationName=external_license_comsol3@bogus2'],
+            ['/usr/bin/scontrol', '--cluster=mycluster', 'delete', 'reservation', 'ReservationName=external_license_comsol3@bogus2'],
         ])

@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -79,6 +79,7 @@ class TestVscPostfixSync(TestCase):
             self.assertEqual(c.read(), "\n".join(oldmap))  # dryrun
 
         newmap = [
+            "compute@vscentrum.be compute.vscentrum@ugent.be\n",
             "vsc40001@vscentrum.be huppel@bar.com\n",
             "vsc40002@vscentrum.be foo2@bar.com\n",
         ]

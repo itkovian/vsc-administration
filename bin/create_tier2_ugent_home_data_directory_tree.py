@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2012-2023 Ghent University
+# Copyright 2012-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -66,7 +66,7 @@ def main():
 
     storage_settings = VscStorage()
 
-    local_storage_conf = configparser.SafeConfigParser()
+    local_storage_conf = configparser.ConfigParser()
     local_storage_conf.read(QUOTA_CONF_FILE)
 
     gpfs = GpfsOperations()

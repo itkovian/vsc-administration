@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -25,17 +25,17 @@ def create_remove_user_jobs_command(user, cluster=None, state=None, account=None
     """
     remove_user_jobs_command = [
         SLURM_SCANCEL,
-        "--user={user}".format(user=user),
+        f"--user={user}",
     ]
 
     if cluster is not None:
-        remove_user_jobs_command.append("--clusters={cluster}".format(cluster=cluster))
+        remove_user_jobs_command.append(f"--clusters={cluster}")
 
     if state is not None:
-        remove_user_jobs_command.append("--state={state}".format(state=state))
+        remove_user_jobs_command.append(f"--state={state}")
 
     if account is not None:
-        remove_user_jobs_command.append("--account={account}".format(account=account))
+        remove_user_jobs_command.append(f"--account={account}")
 
     return remove_user_jobs_command
 
@@ -48,14 +48,14 @@ def create_remove_jobs_for_account_command(account, cluster):
     """
     remove_jobs_command_pending = [
         SLURM_SCANCEL,
-        "--cluster={cluster}".format(cluster=cluster),
-        "--account={account}".format(account=account),
+        f"--cluster={cluster}",
+        f"--account={account}",
         "--state=PENDING",
     ]
     remove_jobs_command_suspended = [
         SLURM_SCANCEL,
-        "--cluster={cluster}".format(cluster=cluster),
-        "--account={account}".format(account=account),
+        f"--cluster={cluster}",
+        f"--account={account}",
         "--state=SUSPENDED",
     ]
 

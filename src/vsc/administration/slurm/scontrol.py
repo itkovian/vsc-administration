@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2023 Ghent University
+# Copyright 2022-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -28,7 +28,7 @@ from vsc.utils.run import asyncloop
 
 SLURM_SCONTROL = "/usr/bin/scontrol"
 
-SLURM_SCONTROL_CONFIG_REGEX = re.compile("^(.*\S)\s+=\s+(\S.*)$")
+SLURM_SCONTROL_CONFIG_REGEX = re.compile(r"^(.*\S)\s+=\s+(\S.*)$")
 
 
 LICENSE_RESERVATION_PREFIX = 'external_license_'
@@ -43,7 +43,7 @@ class ScontrolTypes(Enum):
 ScontrolReservationFields = [
     'ReservationName', 'StartTime', 'EndTime', 'Duration', 'Nodes', 'NodeCnt', 'CoreCnt',
     'Features', 'PartitionName', 'Flags', 'TRES', 'Users', 'Groups', 'Accounts', 'Licenses',
-    'State', 'BurstBuffer', 'Watts', 'MaxStartDelay',
+    'State', 'BurstBuffer', 'MaxStartDelay',
 ]
 
 ScontrolLicenseFields = [
@@ -58,7 +58,7 @@ ScontrolConfigFields = [
 
 ScontrolPartitionFields = [
     'PartitionName', 'AllowGroups', 'AllowAccounts', 'AllowQos', 'AllocNodes', 'Default', 'QoS', 'DefaultTime',
-    'DisableRootJobs', 'ExclusiveUser', 'GraceTime', 'Hidden', 'MaxNodes', 'MaxTime', 'MinNodes', 'LLN',
+    'DisableRootJobs', 'Exclusive', 'GraceTime', 'Hidden', 'MaxNodes', 'MaxTime', 'MinNodes', 'LLN',
     'MaxCPUsPerNode', 'Nodes', 'PriorityJobFactor', 'PriorityTier', 'RootOnly', 'ReqResv', 'OverSubscribe',
     'OverTimeLimit', 'PreemptMode', 'State', 'TotalCPUs', 'TotalNodes', 'SelectTypeParameters', 'JobDefaults',
     'DefMemPerCPU', 'MaxMemPerNode', 'TRESBillingWeights',
@@ -86,7 +86,7 @@ def mkSlurmLicense(fields):
 
 def mkSlurmConfig(fields):
     """Make a named tuple from the given fields"""
-    filtered = dict([(k, v) for k, v in fields.items() if k in ScontrolConfigFields])
+    filtered = {k: v for k, v in fields.items() if k in ScontrolConfigFields}
     config = mkNamedTupleInstance(filtered, SlurmConfig)
     return config
 
@@ -99,11 +99,19 @@ def mkSlurmPartition(fields):
     return lic
 
 
+def base_scontrol_command(cluster=None):
+    """Base scontrol command with cluster if needed."""
+    command = [SLURM_SCONTROL]
+    if cluster is not None:
+        command.extend([f'--cluster={cluster}'])
+    return command
+
 def mkscontrol(mode):
-    """Decorator to prefix common sacctmgr code for mode"""
+    """Decorator to prefix common scontrol code for mode"""
     def decorator(function):
         def wrapper(*args, **kwargs):
-            prefix = [SLURM_SCONTROL, mode]
+            cluster = kwargs.get('cluster', None)
+            prefix = base_scontrol_command(cluster) + [mode]
             return prefix + function(*args, **kwargs)
         return wrapper
     return decorator
@@ -161,13 +169,14 @@ def parse_scontrol_dump(lines, info_type):
     return info
 
 
-def get_scontrol_info(info_type, as_dict=True):
+def get_scontrol_info(info_type, as_dict=True, cluster=None):
     """Get slurm info for the given clusterself.
 
     @param info_type: ScontrolTypes
     """
-    (exitcode, contents) = asyncloop([
-        SLURM_SCONTROL,
+    SCONTROL_COMMAND = base_scontrol_command(cluster)
+
+    (exitcode, contents) = asyncloop(SCONTROL_COMMAND + [
         "show",
         info_type.value,
         "--detail",
@@ -188,15 +197,15 @@ def get_scontrol_info(info_type, as_dict=True):
     info = parse_scontrol_dump(lines, info_type)
 
     if as_dict:
-        field = "%sName" % info_type.value.capitalize()
-        info = dict([(getattr(x, field), x) for x in info])
+        field = f"{info_type.value.capitalize()}Name"
+        info = {getattr(x, field): x for x in info}
 
     return info
 
 
-def get_scontrol_config():
+def get_scontrol_config(cluster=None):
     """Return the scontrol config namedtuple"""
-    return get_scontrol_info(ScontrolTypes.config, as_dict=False).pop()
+    return get_scontrol_info(ScontrolTypes.config, as_dict=False, cluster=cluster).pop()
 
 
 def make_license_reservation_name(licname):
@@ -206,17 +215,17 @@ def make_license_reservation_name(licname):
 
 def _settings_args(settings):
     """Convert settings dict in k=v list"""
-    return ["{0}={1}".format(k, settings[k]) for k in sorted(settings.keys())]
+    return [f"{k}={settings[k]}" for k in sorted(settings.keys())]
 
 
 @mkscontrol('create')
-def create_create_reservation(reservation, settings):
+def create_create_reservation(reservation, settings, cluster=None):  # noqa: C901
     """
     Creates the command to update a reservation
     """
     command = [
         'reservation',
-        'ReservationName={0}'.format(reservation),
+        f'ReservationName={reservation}',
     ]
     command.extend(_settings_args(settings))
 
@@ -224,13 +233,13 @@ def create_create_reservation(reservation, settings):
 
 
 @mkscontrol('update')
-def create_update_reservation(reservation, settings):
+def create_update_reservation(reservation, settings, cluster=None):   # noqa: C901
     """
     Creates the command to update a reservation
     """
     command = [
         'reservation',
-        'ReservationName={0}'.format(reservation),
+        f'ReservationName={reservation}',
     ]
 
     command.extend(_settings_args(settings))
@@ -239,18 +248,18 @@ def create_update_reservation(reservation, settings):
 
 
 @mkscontrol('delete')
-def create_delete_reservation(reservation):
+def create_delete_reservation(reservation, cluster=None):   # noqa: C901
     """
     Creates the command to delete a reservation
     """
     command = [
         'reservation',
-        'ReservationName={0}'.format(reservation),
+        f'ReservationName={reservation}',
     ]
     return command
 
 
-def create_create_license_reservation(licname, value, partition):
+def create_create_license_reservation(licname, value, partition, cluster=None):
     """
     Creates the command to create a license reservation
     """
@@ -258,7 +267,7 @@ def create_create_license_reservation(licname, value, partition):
     # infinite/unlimited means 1 year
     days = 20 * 365
     settings = {
-        'Licenses': '{0}:{1}'.format(licname, value),
+        'Licenses': f'{licname}:{value}',
         'Partition': partition,
         'Start': 'now',
         'Duration': f'{days}-0:0:0',
@@ -266,16 +275,15 @@ def create_create_license_reservation(licname, value, partition):
         'Flags': 'LICENSE_ONLY',
         'NodeCnt': '0',  # otherwise all nodes are placed in the reservation
     }
+    return create_create_reservation(name, settings, cluster=cluster)
 
-    return create_create_reservation(name, settings)
 
-
-def create_update_license_reservation(licname, value):
+def create_update_license_reservation(licname, value, cluster=None):
     """
     Creates the command to update a license reservation
     """
     name = make_license_reservation_name(licname)
     settings = {
-        'Licenses': '{0}:{1}'.format(licname, value),
+        'Licenses': f'{licname}:{value}',
     }
-    return create_update_reservation(name, settings)
+    return create_update_reservation(name, settings, cluster=cluster)

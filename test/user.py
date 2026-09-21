@@ -1,5 +1,5 @@
 #
-# Copyright 2015-2023 Ghent University
+# Copyright 2015-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -148,7 +148,8 @@ test_usergroup_1 = {
     "moderators": [
         "vsc40075"
     ],
-    "description": "Nope"
+    "description": "Nope",
+    "isactive": True
 }
 
 test_admin_group_1 = {
@@ -160,7 +161,8 @@ test_admin_group_1 = {
     },
     "members": [],
     "moderators": [],
-    "description": ""
+    "description": "",
+    "isactive": True
 }
 
 test_pubkeys_1 = [
@@ -323,7 +325,7 @@ test_quota_2 = [
         u'hard': 104857600,
         u'storage': {
             u'institute': u'brussel',
-            u'name': u'VSC_SCRATCH_THEIA',
+            u'name': u'VSC_SCRATCH_RHEA',
             u'storage_type': u'scratch'
         },
         u'user': u'vsc10001'
@@ -337,7 +339,7 @@ test_quota_3 = [
         u'hard': 104857600,
         u'storage': {
             u'institute': u'brussel',
-            u'name': u'VSC_SCRATCH_THEIA',
+            u'name': u'VSC_SCRATCH_RHEA',
             u'storage_type': u'scratch'
         },
         u'user': u'vsc10001'
@@ -454,12 +456,15 @@ class VscTier2AccountpageUserTest(TestCase):
             test_account = mkVscAccount(account)
             mock_client.account[test_account.vsc_id].quota.get.return_value = (200, quota)
 
-            return user.VscTier2AccountpageUser(
-                test_account.vsc_id,
-                storage=config.VscStorage(),
-                rest_client=mock_client,
-                account=test_account,
-                host_institute=site)
+            with mock.patch('vsc.administration.base.StorageOperator') as mock_storage_operator:
+                mock_storage_operator.return_value = mock.MagicMock()
+
+                return user.VscTier2AccountpageUser(
+                    test_account.vsc_id,
+                    storage=config.VscStorage(),
+                    rest_client=mock_client,
+                    account=test_account,
+                    host_institute=site)
 
         for account, quota, site, fileset in tests:
             accountpageuser = set_up_accountpageuser(account, quota, site)
@@ -538,53 +543,59 @@ class UserDeploymentTest(TestCase):
 
                             self.assertEqual(mock_user_instance.create_scratch_dir.called, True)
 
-    @mock.patch('vsc.administration.user.GpfsOperations', autospec=True)
     @mock.patch('vsc.accountpage.client.AccountpageClient', autospec=True)
-    def test_create_home_dir_tier2_user(self, mock_client, mock_gpfsoperations):
+    def test_create_home_dir_tier2_user(self, mock_client):
 
         test_accounts = [(test_account_1, GENT), (test_account_3, BRUSSEL)]
 
-        for account, site in test_accounts:
-            test_account = mkVscAccount(account)
-            accountpageuser = user.VscTier2AccountpageUser(
-                test_account.vsc_id,
-                storage=config.VscStorage(),
-                rest_client=mock_client,
-                account=test_account,
-                host_institute=site)
-            accountpageuser.create_home_dir()
+        with mock.patch('vsc.administration.base.StorageOperator') as mock_storage_operator:
+            mock_storage_operator.return_value = mock.MagicMock()
 
-    @mock.patch('vsc.administration.user.GpfsOperations', autospec=True)
+            for account, site in test_accounts:
+                test_account = mkVscAccount(account)
+                accountpageuser = user.VscTier2AccountpageUser(
+                    test_account.vsc_id,
+                    storage=config.VscStorage(),
+                    rest_client=mock_client,
+                    account=test_account,
+                    host_institute=site)
+                accountpageuser.create_home_dir()
+
     @mock.patch('vsc.accountpage.client.AccountpageClient', autospec=True)
-    def test_create_data_dir_tier2_user(self, mock_client, mock_gpfsoperations):
+    def test_create_data_dir_tier2_user(self, mock_client):
 
         test_accounts = [(test_account_1, GENT), (test_account_3, BRUSSEL)]
 
-        for account, site in test_accounts:
-            test_account = mkVscAccount(account)
-            accountpageuser = user.VscTier2AccountpageUser(
-                test_account.vsc_id,
-                storage=config.VscStorage(),
-                rest_client=mock_client,
-                account=test_account,
-                host_institute=site)
-            accountpageuser.create_data_dir()
+        with mock.patch('vsc.administration.base.StorageOperator') as mock_storage_operator:
+            mock_storage_operator.return_value = mock.MagicMock()
 
-    @mock.patch('vsc.administration.user.GpfsOperations', autospec=True)
+            for account, site in test_accounts:
+                test_account = mkVscAccount(account)
+                accountpageuser = user.VscTier2AccountpageUser(
+                    test_account.vsc_id,
+                    storage=config.VscStorage(),
+                    rest_client=mock_client,
+                    account=test_account,
+                    host_institute=site)
+                accountpageuser.create_data_dir()
+
     @mock.patch('vsc.accountpage.client.AccountpageClient', autospec=True)
-    def test_create_scratch_dir_tier2_user(self, mock_client, mock_gpfsoperations):
+    def test_create_scratch_dir_tier2_user(self, mock_client):
 
         test_accounts = [(test_account_1, GENT), (test_account_3, BRUSSEL)]
 
-        for account, site in test_accounts:
-            test_account = mkVscAccount(account)
-            accountpageuser = user.VscTier2AccountpageUser(
-                test_account.vsc_id,
-                storage=config.VscStorage(),
-                rest_client=mock_client,
-                account=test_account,
-                host_institute=site)
-            accountpageuser.create_scratch_dir(VSC_PRODUCTION_SCRATCH[site][0])
+        with mock.patch('vsc.administration.base.StorageOperator') as mock_storage_operator:
+            mock_storage_operator.return_value = mock.MagicMock()
+
+            for account, site in test_accounts:
+                test_account = mkVscAccount(account)
+                accountpageuser = user.VscTier2AccountpageUser(
+                    test_account.vsc_id,
+                    storage=config.VscStorage(),
+                    rest_client=mock_client,
+                    account=test_account,
+                    host_institute=site)
+                accountpageuser.create_scratch_dir(VSC_PRODUCTION_SCRATCH[site][0])
 
     @mock.patch('vsc.accountpage.client.AccountpageClient', autospec=True)
     def test_process_regular_users_quota(self, mock_client):

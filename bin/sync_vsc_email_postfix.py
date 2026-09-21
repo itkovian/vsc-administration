@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2013-2023 Ghent University
+# Copyright 2013-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -20,6 +20,10 @@ import logging
 
 from vsc.accountpage.sync import Sync
 
+
+FIXED_VSCENTRUM_ALIASES = {
+    'compute@vscentrum.be': 'compute.vscentrum@ugent.be',
+}
 
 
 class VscPostfixSync(Sync):
@@ -42,24 +46,25 @@ class VscPostfixSync(Sync):
             logging.info("No changed accounts. Not rewriting the canonical map file.")
             return
 
-        active_emails = dict([("%s@vscentrum.be" % a.vsc_id, a.email) for a in active_accounts])
-        inactive_emails = set(["%s@vscentrum.be" % a.vsc_id for a in inactive_accounts])
+        active_emails = {f"{a.vsc_id}@vscentrum.be": a.email for a in active_accounts}
+        active_emails.update(FIXED_VSCENTRUM_ALIASES)
+        inactive_emails = {f"{a.vsc_id}@vscentrum.be" for a in inactive_accounts}
 
         logging.debug("active emails: %s", active_emails)
         logging.debug("inactive emails: %s", inactive_emails)
 
         address_map = dict()
         try:
-            with open(self.options.postfix_canonical_map, 'r') as cm:
+            with open(self.options.postfix_canonical_map) as cm:
                 address_map = dict(
                     [tuple(l) for l in [l.split() for l in cm.readlines()] if l and l[0] not in inactive_emails]
                 )
-        except IOError as err:
+        except OSError as err:
             logging.warning("No canonical map at %s: %s", self.options.postfix_canonical_map, err)
 
         address_map.update(active_emails)
 
-        txt = "\n".join(["%s %s" % kv for kv in address_map.items()] + [''])
+        txt = "\n".join([f"%s %s" % kv for kv in address_map.items()] + [''])
 
         if dry_run:
             logging.info("Dry run. File contents:\n%s", txt)

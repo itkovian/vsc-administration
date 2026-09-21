@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014-2023 Ghent University
+# Copyright 2014-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -66,19 +66,19 @@ def main():
     current = original.get()
     if current[0] in (200,):
         if opts.options.original:
-            print("Original values: %s" % (current[1],))
+            print(f"Original values: {current[1]}")
     else:
         print("Error, could not get original quota values for the given parameters")
-        print("Issue: %s" % (current[1],))
+        print(f"Issue: {current[1]}")
         sys.exit(-1)
 
     result = upload.put(body={"hard": size})
     if result[0] in (200,):
         print("Request OK.")
-        print("New values: %s" % (result[1],))
+        print(f"New values: {result[1]}")
     else:
         print("Request failed")
-        print("Issue: %s" % (result[1],))
+        print(f"Issue: {result[1]}")
 
 if __name__ == '__main__':
     main()

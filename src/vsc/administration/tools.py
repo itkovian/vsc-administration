@@ -1,6 +1,5 @@
-# -*- coding: latin-1 -*-
 #
-# Copyright 2012-2023 Ghent University
+# Copyright 2012-2026 Ghent University
 #
 # This file is part of vsc-administration,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -45,3 +44,26 @@ def create_stat_directory(path, permissions, uid, gid, posix, override_permissio
     """
     logging.warning("The create_stat_directory function has moved to vsc.filesystems")
     return posix.create_stat_directory(path, permissions, uid, gid, override_permissions=override_permissions)
+
+def quota_limits(quota, soft_fraction, replication_factor=1):
+    """
+    Calculate quota hard and soft limits taking into account data replication
+
+    @type quota: quota limit in arbitrary units
+    @type soft_fraction: numeric between 0 and 1
+    @type replication_factor: numeric bigger than 1
+    """
+    if soft_fraction > 1 or soft_fraction < 0:
+        err_msg = f"Fraction of soft quota limit is out of [0-1] range: {soft_fraction}"
+        logging.exception(err_msg)
+        raise Exception(err_msg)
+
+    if replication_factor < 1:
+        err_msg = "Data replication factor is below 1"
+        logging.exception(err_msg)
+        raise Exception(err_msg)
+
+    hard = quota * replication_factor
+    soft = int(hard * soft_fraction)
+
+    return hard, soft
