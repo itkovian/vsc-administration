@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Andy Georges", email = "itkovian@gmail.com" }
 ]
-requires-python = ">=3.9,<4.0"
+requires-python = "==3.9.*"
 dependencies = [
     "lockfile == 0.12.2",
     "vsc-accountpage-clients",
