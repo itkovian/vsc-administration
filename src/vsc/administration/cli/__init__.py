@@ -17,3 +17,8 @@ This module provides the command-line interface for vsc-administration
 """
 
 from vsc.administration.cli.sync_slurm_ap import sync_slurm_acct_main as sync_slurm_acct_main
+from vsc.administration.cli.sync_vsc_users import sync_vsc_users_main as sync_vsc_users_main
+from vsc.administration.cli.sync_vsc_email_postfix import sync_vsc_email_postfix_main as sync_vsc_email_postfix_main
+from vsc.administration.cli.sync_slurm_external_licenses import sync_slurm_external_licenses_main as sync_slurm_external_licenses_main
+from vsc.administration.cli.replicate_scratch_tree import replicate_scratch_tree_main as replicate_scratch_tree_main
+from vsc.administration.cli.create_tier2_ugent_home_data_directory_tree import create_tier2_ugent_home_data_directory_tree_main as create_tier2_ugent_home_data_directory_tree_main

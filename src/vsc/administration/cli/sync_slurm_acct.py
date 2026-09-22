@@ -185,7 +185,3 @@ def sync_slurm_acct_main():
         logging.exception("critical exception caught: %s", err)
         opts.critical("Script failed in a horrible way")
         sys.exit(NAGIOS_EXIT_CRITICAL)
-
-
-if __name__ == "__main__":
-    main()

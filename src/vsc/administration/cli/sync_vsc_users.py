@@ -59,7 +59,7 @@ class UserGroupStatusUpdateError(Exception):
     pass
 
 
-def main():
+def sync_vsc_users_main():
     """
     Main script.
     - build the filter

@@ -363,7 +363,7 @@ def update_license_reservations(licenses, cluster, partition, ignore_reservation
     return new_update_cmds, remove_cmds
 
 
-def main():
+def sync_slurm_external_licenses_main():
     """
     Main script. The usual.
     """
@@ -429,7 +429,3 @@ def main():
         sys.exit(NAGIOS_EXIT_CRITICAL)
 
     extopts.epilogue("external licenses sync complete", None)
-
-
-if __name__ == "__main__":
-    main()

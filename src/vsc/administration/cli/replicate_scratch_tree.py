@@ -148,7 +148,7 @@ def set_up_filesystem(
                         logging.error("Cannot create dir %s", member_path)
 
 
-def main():
+def replicate_scratch_tree_main():
     """
     Main script.
     - process the users and VOs

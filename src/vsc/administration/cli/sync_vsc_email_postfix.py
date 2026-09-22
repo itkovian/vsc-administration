@@ -75,5 +75,5 @@ class VscPostfixSync(Sync):
                 logging.info("File %s written. %d entries.", self.options.postfix_canonical_map, len(address_map))
 
 
-if __name__ == '__main__':
+def sync_vsc_email_postfix_main():
     VscPostfixSync().main()

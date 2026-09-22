@@ -62,7 +62,7 @@ def set_up_filesystem(gpfs, storage_settings, storage, filesystem_info, filesyst
             logging.info("Fileset %s created and linked at %s", fileset_name, vo_fileset_path)
 
 
-def main():
+def create_tier2_ugent_home_data_directory_tree_main():
 
     storage_settings = VscStorage()
 
@@ -83,6 +83,3 @@ def main():
             set_up_apps(gpfs, storage_settings, storage_name, filesystem_info, filesystem_name)
         else:
             set_up_filesystem(gpfs, storage_settings, storage_name, filesystem_info, filesystem_name, vo_support=True)
-
-if __name__ == '__main__':
-    main()

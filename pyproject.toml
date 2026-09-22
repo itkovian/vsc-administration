@@ -24,7 +24,12 @@ build-backend = "hatchling.build"
 packages = ["src/vsc"]
 
 [project.scripts]
+create_tier2_ugent_home_data_directory_tree = "vsc.administration.cli:create_tier2_ugent_home_data_directory_tree_main"
 sync_slurm_acct = "vsc.administration.cli:sync_slurm_acct_main"
+sync_slurm_external_licenses = "vsc.administration.cli:sync_slurm_external_licenses_main"
+sync_vsc_email_postfix = "vsc.administration.cli:sync_vsc_email_postfix_main"
+sync_vsc_users = "vsc.administration.cli:sync_vsc_users_main"
+replicate_scratch_tree = "vsc.administration.cli:replicate_scratch_tree_main"
 
 
 [tool.uv.sources]
