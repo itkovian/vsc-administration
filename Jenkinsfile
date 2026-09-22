@@ -12,13 +12,22 @@ stages {
             sh 'git clean -fxd'
         }
     }
+    stage('install uv') {
+        steps {
+            sh 'curl -L --silent https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz --output - | tar -xzv'
+            sh 'cp uv-x86_64-unknown-linux-gnu/uv .'
+            sh './uv --version'
+            sh './uv python install 3.9'
+            sh './uv sync --python 3.9 --managed-python'
+            sh './uv sync --python 3.9 --managed-python --group dev'
+        }
+    }
     stage('test pipeline') {
         parallel {
             stage('test') {
                 steps {
-                    sh 'pip3 install --ignore-installed --prefix $PWD/.vsc-tox tox'
-                    sh 'export PATH=$PWD/.vsc-tox/bin:$PATH && export PYTHONPATH=$PWD/.vsc-tox/lib/python$(python3 -c "import sys; print(\\"%s.%s\\" % sys.version_info[:2])")/site-packages:$PYTHONPATH && tox -v -c tox.ini'
-                    sh 'rm -r $PWD/.vsc-tox'
+                    sh './uv run tox'
+                    sh 'rm -r $PWD/.venv $PWD/.tox'
                 }
             }
         }
